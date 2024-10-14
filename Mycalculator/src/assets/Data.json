@@ -1,0 +1,22 @@
+{
+   "products":[
+    {"Pname":"Macbook",
+     "Pid":1900,
+     "Pprice":"78,9000",
+     "color":"Green"
+    },
+    {
+    "Pname":"iPhone",
+     "Pid":1901,
+     "Pprice":"78,9000",
+     "color":"golden"
+    },
+    {
+     "Pname":"Macbook",
+     "Pid":1902,
+     "Pprice":"78,9000",
+     "color":"yellow"
+    }
+    
+    ]
+}
