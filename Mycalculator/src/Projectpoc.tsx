@@ -16,15 +16,15 @@ import {
   Divider,
   Chip,
   Tooltip,
+  FormHelperText,
 } from "@mui/material";
 import Grid from "@mui/material/Grid2";
 import { useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
-import { FieldArray,Field } from "formik";
+import { FieldArray, Field } from "formik";
 import { Formik, Form } from "formik";
 import { GoalSelectionvalidation } from "./validation";
 import * as React from "react";
-import ClearIcon from "@mui/icons-material/Clear";
 
 const EmployeeNames = [
   "Jovi D'Silva",
@@ -48,19 +48,27 @@ const Skills = [
   "Basic Design Skills",
   "Communication skills",
   "Team Player",
+  "All of the above",
+  "xx",
+  "yy",
+  "zz",
+  "kk",
+  "mm",
 ];
 
-let Total = 0;
 const GOALS_COUNT = 1;
-
+let Global_total = 100;
 const Projectpoc = () => {
   const [ShowModal, setShowModal] = useState<boolean>(false);
   const [DisplayGoals, setDisplayGoals] = useState([]);
   const [DisplaySkills, setDisplaySkills] = useState([]);
+  const [Total, setTotal] = useState(100);
 
   const initialValues = {
     employeename: "",
     goalsArray: [],
+    Dgoals: [],
+    weightageTotal: 0,
     skillsArray: [],
     skill: "",
     weightage1: 0,
@@ -72,14 +80,34 @@ const Projectpoc = () => {
     console.log(value);
   };
 
-  function validategoal(value:any) {
-    console.log("reaching here")
+  function validategoal(value) {
     let error;
-    if (value=="") {
-      error = 'Required';
+    if (value == "") {
+      error = "Required";
     }
     return error;
   }
+
+  function validateweightage(value) {
+    let err;
+    if (value == 0) {
+      return (err = "Required");
+    } else if (value < 1 || value > 100) {
+      return (err = "not valid weightage");
+    }
+  }
+
+  const helper = () => {
+    if (100 - Total < 100) {
+      return "Enter value 1 -" + Total;
+    } else {
+      return "";
+    }
+  };
+
+  React.useEffect(() => {
+    setTotal(Global_total);
+  }, [DisplayGoals]);
 
   const openDialog = () => {
     setShowModal(true);
@@ -88,8 +116,6 @@ const Projectpoc = () => {
   const closeDialog = () => {
     setShowModal(false);
   };
-
-  const GoalRemoval = () => {};
 
   const GoalSelectionSteps = ["Employee Selection", "Set Goals", "Set Skills"];
 
@@ -101,8 +127,6 @@ const Projectpoc = () => {
       <Dialog fullScreen open={ShowModal}>
         <Box sx={{ mx: 20, my: 3 }}>
           <Stack direction={"column"} spacing={10}>
-            {/* {insert} */}
-
             <Formik
               initialValues={initialValues}
               onSubmit={submit}
@@ -115,7 +139,7 @@ const Projectpoc = () => {
                 handleBlur,
                 errors,
                 touched,
-                validateField
+                validateField,
               }) => (
                 <Form>
                   <Grid container sx={{ justifyContent: "space-between" }}>
@@ -182,7 +206,7 @@ const Projectpoc = () => {
                                 Select Employee
                               </Typography>
                               <Autocomplete
-                                name="employeename"
+                                name="employeename" //Typescript error
                                 options={EmployeeNames}
                                 value={values.employeename}
                                 onChange={(e, values) => {
@@ -193,7 +217,7 @@ const Projectpoc = () => {
                                 )}
                               ></Autocomplete>
                               {errors.employeename && (
-                                <Typography>
+                                <Typography color="error">
                                   please select employee name
                                 </Typography>
                               )}
@@ -216,9 +240,10 @@ const Projectpoc = () => {
                                     </Typography>
                                     <Button
                                       onClick={() => {
-
-                                         validateField('goal1');
-                                    
+                                        validateField("goal1");
+                                        validateField("weightage1");
+                                        validateField("goal2");
+                                        validateField("weightage2");
                                         if (
                                           (values.goal1 != "" &&
                                             values.weightage1 != 0) ||
@@ -229,62 +254,102 @@ const Projectpoc = () => {
                                             values.goal2 == "" &&
                                             values.weightage2 == 0
                                           ) {
-                                            Total = Total + values.weightage2;
+                                            const vali1 =
+                                              values.Dgoals.includes(
+                                                values.goal1
+                                              );
+                                            if (
+                                              values.weightage1 >= 1 &&
+                                              values.weightage1 <= 100 &&
+                                              100 - Total + values.weightage1 <=
+                                                100 &&
+                                              vali1 == false
+                                            ) {
+                                              Global_total =
+                                                Total - values.weightage1;
+                                              setFieldValue(
+                                                `goalsArray.${DisplayGoals.length}.goal`,
+                                                values.goal1
+                                              );
+                                              setFieldValue(
+                                                `goalsArray.${DisplayGoals.length}.weightage`,
+                                                values.weightage1
+                                              );
+                                              setFieldValue("Dgoals", [
+                                                ...values.Dgoals,
+                                                values.goal1,
+                                              ]);
 
-                                            setFieldValue(
-                                              `goalsArray.${DisplayGoals.length}.goal`,
-                                              values.goal1
-                                            );
-                                            setFieldValue(
-                                              `goalsArray.${DisplayGoals.length}.weightage`,
-                                              values.weightage1
-                                            );
+                                              const updated1 = [
+                                                ...values.goalsArray,
+                                                {
+                                                  goal: values.goal1,
+                                                  weightage: values.weightage1,
+                                                },
+                                              ];
 
-                                            const updated1 = [
-                                              ...values.goalsArray,
-                                              {
-                                                goal: values.goal1,
-                                                weightage: values.weightage1,
-                                              },
-                                            ];
-
-                                            console.log(
-                                              GOALS_COUNT +
-                                                values.goalsArray.length,
-                                              "length"
-                                            );
-                                            setFieldValue("goal1", "");
-                                            setFieldValue("goal2", "");
-                                            setFieldValue("weightage1", 0);
-                                            setFieldValue("weightage2", 0);
-                                            setDisplayGoals(updated1);
+                                              console.log(
+                                                GOALS_COUNT +
+                                                  values.goalsArray.length,
+                                                "length"
+                                              );
+                                              setFieldValue(
+                                                "weightageTotal",
+                                                values.weightageTotal +
+                                                  values.weightage1
+                                              );
+                                              setFieldValue("goal1", "");
+                                              setFieldValue("goal2", "");
+                                              setFieldValue("weightage1", 0);
+                                              setFieldValue("weightage2", 0);
+                                              setDisplayGoals(updated1);
+                                            }
                                           } else {
-                                            setFieldValue(
-                                              `goalsArray.${DisplayGoals.length}.goal`,
-                                              values.goal2
-                                            );
-                                            setFieldValue(
-                                              `goalsArray.${DisplayGoals.length}.weightage`,
-                                              values.weightage2
-                                            );
+                                            const vali2 =
+                                              values.Dgoals.includes(
+                                                values.goal2
+                                              );
+                                            if (
+                                              values.weightage2 >= 1 &&
+                                              values.weightage2 <= 100 &&
+                                              100 - Total + values.weightage2 <=
+                                                100 &&
+                                              vali2 == false
+                                            ) {
+                                              Global_total =
+                                                Total - values.weightage2;
+                                              setFieldValue(
+                                                `goalsArray.${DisplayGoals.length}.goal`,
+                                                values.goal2
+                                              );
+                                              setFieldValue(
+                                                `goalsArray.${DisplayGoals.length}.weightage`,
+                                                values.weightage2
+                                              );
 
-                                            const updated2 = [
-                                              ...values.goalsArray,
-                                              {
-                                                goal: values.goal2,
-                                                weightage: values.weightage2,
-                                              },
-                                            ];
-                                            console.log(
-                                              GOALS_COUNT +
-                                                values.goalsArray.length,
-                                              "length"
-                                            );
-                                            setFieldValue("goal1", "");
-                                            setFieldValue("goal2", "");
-                                            setFieldValue("weightage1", 0);
-                                            setFieldValue("weightage2", 0);
-                                            setDisplayGoals(updated2);
+                                              const updated2 = [
+                                                ...values.goalsArray,
+                                                {
+                                                  goal: values.goal2,
+                                                  weightage: values.weightage2,
+                                                },
+                                              ];
+                                              console.log(
+                                                GOALS_COUNT +
+                                                  values.goalsArray.length,
+                                                "length"
+                                              );
+                                              setFieldValue(
+                                                "weightageTotal",
+                                                values.weightageTotal +
+                                                  values.weightage2
+                                              );
+                                              setFieldValue("goal1", "");
+                                              setFieldValue("goal2", "");
+                                              setFieldValue("weightage1", 0);
+                                              setFieldValue("weightage2", 0);
+                                              setDisplayGoals(updated2);
+                                            }
                                           }
                                         }
                                       }}
@@ -299,60 +364,87 @@ const Projectpoc = () => {
                                     sx={{ justifyContent: "space-between" }}
                                   >
                                     <Grid>
-                                        <Field name="goal1" validate={validategoal}>
-                                            {({field})=>(
-
-                                            
-                                      <Select
-                                      {...field}
-                                        id="select-goals"
+                                      <Field
                                         name="goal1"
-                                        value={values.goal1}
-                                        
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "goal1",
-                                            e?.target?.value
-                                          );
-                                        }}
-                                        onClick={() => {
-                                          setFieldValue("goal2", "");
-                                          setFieldValue("weightage2", "");
-                                        }}
+                                        validate={validategoal}
                                       >
-                                        {Goals.map((goal) => {
-                                          return (
-                                            <MenuItem value={goal}>
-                                              {goal}
-                                            </MenuItem>
-                                          );
-                                        })}
-                                      </Select>
-              )}
+                                        {({ field }) => (
+                                          <Select
+                                            {...field}
+                                            id="select-goals"
+                                            name="goal1"
+                                            value={values.goal1}
+                                            onChange={(e) => {
+                                              setFieldValue(
+                                                "goal1",
+                                                e?.target?.value
+                                              );
+                                            }}
+                                            onClick={() => {
+                                              setFieldValue("goal2", "");
+                                              setFieldValue("weightage2", "");
+                                            }}
+                                          >
+                                            {Goals.map((goal) => {
+                                              return (
+                                                <MenuItem value={goal}>
+                                                  {goal}
+                                                </MenuItem>
+                                              );
+                                            })}
+                                          </Select>
+                                        )}
                                       </Field>
-                                  
-                                      {errors.goal1 && (
-                                        <Typography>
-                                          please select goal
-                                        </Typography>
-                                      )}
+
+                                      {errors.goal1 &&
+                                        values.goalsArray.length < 8 && (
+                                          <Typography color="error">
+                                            please select goal
+                                          </Typography>
+                                        )}
                                     </Grid>
 
                                     <Grid>
-                                      <TextField
-                                        id="weightage"
-                                        placeholder="Weightage"
+                                      <Field
                                         name="weightage1"
-                                        type="number"
-                                        variant="outlined"
-                                        value={values.weightage1}
-                                        onChange={handleChange}
-                                        onClick={() => {
-                                          setFieldValue("goal2", "");
-                                          setFieldValue("weightage2", "");
-                                        }}
-                                        helperText="Enter Value between 1 - 100"
-                                      />
+                                        validate={validateweightage}
+                                      >
+                                        {({ field }) => (
+                                          <TextField
+                                            {...field}
+                                            id="weightage"
+                                            placeholder="Weightage"
+                                            name="weightage1"
+                                            type="number"
+                                            variant="outlined"
+                                            value={values.weightage1}
+                                            onChange={handleChange}
+                                            onClick={() => {
+                                              setFieldValue("goal2", "");
+                                              setFieldValue("weightage2", "");
+                                            }}
+                                            slotProps={{
+                                              htmlInput: {
+                                                min: 0,
+                                                max: Total,
+                                              },
+                                            }}
+                                            helperText={helper()}
+                                          />
+                                        )}
+                                      </Field>
+                                      {errors.weightage1 == "Required" &&
+                                        values.goalsArray.length < 8 && (
+                                          <Typography color="error">
+                                            Please insert the weightage
+                                          </Typography>
+                                        )}
+                                      {errors.weightage1 ==
+                                        "not valid weightage" && (
+                                        <Typography color="error">
+                                          Not vaid weightage
+                                        </Typography>
+                                      )}
                                     </Grid>
                                   </Grid>
 
@@ -362,37 +454,75 @@ const Projectpoc = () => {
 
                                   <Grid sx={{ display: "flex" }}>
                                     <Grid sx={{ flexGrow: "1" }}>
-                                      <TextField
-                                        id="select-goals"
+                                      <Field
                                         name="goal2"
-                                        value={values.goal2}
-                                        placeholder="Type here"
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "goal2",
-                                            e?.target?.value
-                                          );
-                                        }}
-                                        onClick={() => {
-                                          setFieldValue("goal1", "");
-                                          setFieldValue("weightage1", "");
-                                        }}
-                                      ></TextField>
+                                        validate={validategoal}
+                                      >
+                                        {({ field }) => (
+                                          <TextField
+                                            id="select-goals"
+                                            name="goal2"
+                                            value={values.goal2}
+                                            placeholder="Type here"
+                                            onChange={(e) => {
+                                              setFieldValue(
+                                                "goal2",
+                                                e?.target?.value
+                                              );
+                                            }}
+                                            onClick={() => {
+                                              setFieldValue("goal1", "");
+                                              setFieldValue("weightage1", "");
+                                            }}
+                                          ></TextField>
+                                        )}
+                                      </Field>
+                                      {errors.goal2 &&
+                                        values.goalsArray.length < 8 && (
+                                          <Typography color="error">
+                                            Please insert goal
+                                          </Typography>
+                                        )}
                                     </Grid>
                                     <Grid>
-                                      <TextField
-                                        onChange={handleChange}
-                                        id="weightage"
+                                      <Field
                                         name="weightage2"
-                                        placeholder="Weightage"
-                                        type="number"
-                                        value={values.weightage2}
-                                        helperText="Enter value between 1-100"
-                                        onClick={() => {
-                                          setFieldValue("goal1", "");
-                                          setFieldValue("weightage1", "");
-                                        }}
-                                      ></TextField>
+                                        validate={validateweightage}
+                                      >
+                                        {({ field }) => (
+                                          <TextField
+                                            onChange={handleChange}
+                                            id="weightage"
+                                            name="weightage2"
+                                            placeholder="Weightage"
+                                            type="number"
+                                            value={values.weightage2}
+                                            helperText={helper()}
+                                            slotProps={{
+                                              htmlInput: {
+                                                min: 0,
+                                                max: Total,
+                                              },
+                                            }}
+                                            onClick={() => {
+                                              setFieldValue("goal1", "");
+                                              setFieldValue("weightage1", "");
+                                            }}
+                                          ></TextField>
+                                        )}
+                                      </Field>
+                                      {errors.weightage2 == "Required" &&
+                                        values.goalsArray.length < 8 && (
+                                          <Typography color="error">
+                                            Please insert the weightage
+                                          </Typography>
+                                        )}
+                                      {errors.weightage2 ==
+                                        "not valid weightage" && (
+                                        <FormHelperText>
+                                          Not valid weightage
+                                        </FormHelperText>
+                                      )}
                                     </Grid>
                                   </Grid>
                                 </Stack>
@@ -415,10 +545,18 @@ const Projectpoc = () => {
                               width={"100%"}
                             >
                               {DisplayGoals.length == 0 ? (
-                                <Grid height={"300px"}>
-                                  <Typography variant="h6">
-                                    No Goals Added Yet!
-                                  </Typography>
+                                <Grid
+                                  container
+                                  sx={{ justifyContent: "center" }}
+                                >
+                                  <Grid
+                                    height={"300px"}
+                                    sx={{ position: "relative", top: "150px" }}
+                                  >
+                                    <Typography variant="h5">
+                                      No Goals Added Yet!
+                                    </Typography>
+                                  </Grid>
                                 </Grid>
                               ) : (
                                 DisplayGoals.map((d, index) => {
@@ -428,15 +566,27 @@ const Projectpoc = () => {
                                         <Button
                                           varaint="outlined"
                                           onClick={() => {
+                                            console.log(
+                                              values.goalsArray[index].weightage
+                                            );
+                                            Global_total =
+                                              Total +
+                                              values.goalsArray[index]
+                                                .weightage;
+                                            setFieldValue(
+                                              "weightageTotal",
+                                              values.weightageTotal -
+                                                values.goalsArray[index]
+                                                  .weightage
+                                            );
+
                                             const UpdatedDisplayGoals =
                                               DisplayGoals.filter((el, i) => {
                                                 if (index != i) {
                                                   return el;
                                                 }
                                               });
-                                            console.log(UpdatedDisplayGoals);
-                                            values.goalsArray =
-                                              UpdatedDisplayGoals;
+                                            setFieldValue("goalsArray",UpdatedDisplayGoals)
                                             setDisplayGoals(
                                               UpdatedDisplayGoals
                                             );
@@ -467,22 +617,39 @@ const Projectpoc = () => {
                               )}
                             </Grid>
 
-                            {DisplayGoals.length > 8 ||
-                              (errors.goalsArray == "Goals Exceeded" && (
-                                <Typography>maximum goals must be 8</Typography>
-                              ))}
-                            {(errors.goalsArray ==
-                              "not satisfing minnimum goals" ||
-                              DisplayGoals.length < 5) && (
-                              <Typography>minimum goals must be 5</Typography>
-                            )}
+                            {DisplayGoals.length > 8 &&
+                              errors.goalsArray == "Goals Exceeded" && (
+                                <Typography color="error">
+                                  maximum goals must be 8
+                                </Typography>
+                              )}
+                            {errors.goalsArray ==
+                              "not satisfing minnimum goals" &&
+                              DisplayGoals.length < 5 && (
+                                <Typography color="error">
+                                  minimum goals must be 5
+                                </Typography>
+                              )}
                           </Grid>
                         </Grid>
                         {DisplayGoals.length != 0 && (
-                          <Grid sx={{ bgcolor: "#eeeeee" }} width={"100%"}>
+                          <Grid
+                            container
+                            sx={{
+                              bgcolor: "#eeeeee",
+                              justifyContent: "space-between",
+                              p: 1,
+                            }}
+                            width={"100%"}
+                          >
                             <Typography>Total</Typography>
-                            <Typography>{Total}/100</Typography>
+                            <Typography>{100 - Total}/100</Typography>
                           </Grid>
+                        )}
+                        {errors.weightageTotal && DisplayGoals.length != 0 && (
+                          <Typography color="error">
+                            please make total to 100
+                          </Typography>
                         )}
 
                         <Grid sx={{ bgcolor: "#eeeeee" }}>
@@ -522,40 +689,71 @@ const Projectpoc = () => {
                           </Paper>
                         </Grid>
 
-                        <Grid container direction={"column"} rowGap={2}>
-                          <Grid>
-                            <Typography>Skills</Typography>
+                        {DisplaySkills.length != 0 ? (
+                          <Grid container direction={"column"} rowGap={2}>
+                            <Grid>
+                              <Typography>Skills</Typography>
+                            </Grid>
+                            <Grid
+                              container
+                              sx={{ bgcolor: "#eeeeee", p: 2 }}
+                              spacing={2}
+                            >
+                              {DisplaySkills.map((skill, index) => {
+                                return (
+                                  <Chip
+                                    variant="outlined"
+                                    label={skill}
+                                    onDelete={() => {
+                                      const UpdatedSkillsList =
+                                        DisplaySkills.filter(
+                                          (skl, taregtedindex) => {
+                                            if (index != taregtedindex) {
+                                              return skl;
+                                            }
+                                          }
+                                        );
+                                      setFieldValue(
+                                        "skillsArray",
+                                        UpdatedSkillsList
+                                      );
+                                      setDisplaySkills(UpdatedSkillsList);
+                                    }}
+                                  ></Chip>
+                                );
+                              })}
+                            </Grid>
                           </Grid>
+                        ) : (
                           <Grid
                             container
-                            sx={{ bgcolor: "#eeeeee", p: 2 }}
-                            spacing={2}
+                            sx={{
+                              bgcolor: "#eeeeee",
+                              width: "100%",
+                              height: "300px",
+                              justifyContent: "center",
+                            }}
                           >
-                            {DisplaySkills.map((skill, index) => {
-                              return (
-                                <Chip
-                                  variant="outlined"
-                                  label={skill}
-                                  onDelete={() => {
-                                    const UpdatedSkillsList =
-                                      DisplaySkills.filter(
-                                        (skl, taregtedindex) => {
-                                          if (index != taregtedindex) {
-                                            return skl;
-                                          }
-                                        }
-                                      );
-                                    setFieldValue(
-                                      "skillsArray",
-                                      UpdatedSkillsList
-                                    );
-                                    setDisplaySkills(UpdatedSkillsList);
-                                  }}
-                                ></Chip>
-                              );
-                            })}
+                            <Typography
+                              sx={{ position: "relative", top: "150px" }}
+                              variant="h5"
+                            >
+                              No Skills Added Yet!
+                            </Typography>
                           </Grid>
-                        </Grid>
+                        )}
+
+                        {errors.skillsArray ==
+                          "not satisfing minimum skills" && (
+                          <Typography color="error">
+                            Minimum skill must be 5
+                          </Typography>
+                        )}
+                        {errors.skillsArray == "skills Exceeded" && (
+                          <Typography color="error">
+                            Maximum skills must be 8
+                          </Typography>
+                        )}
                       </Grid>
                     </Grid>
                   </Grid>
